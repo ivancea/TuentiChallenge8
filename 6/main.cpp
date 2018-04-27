@@ -21,29 +21,41 @@ struct Note {
     }
 };
 
-void solve(const vector<Note>& notes, vector<int>& scores, const long long end){
-    vector<bool> addedScoreNote(notes.size());
+int solve(const vector<Note>& notes){
+    vector<int> scores(notes.size());
     queue<int> indexesToUpdate;
 
     for(int i=0; i<notes.size(); i++){
         indexesToUpdate.push(i);
     }
 
+    int maxScore = 0;
+
     while(indexesToUpdate.size() > 0){
         const int currentIndex = indexesToUpdate.front();
         indexesToUpdate.pop();
         const Note& currentNote = notes[currentIndex];
         int& currentScore = scores[currentIndex];
+        
+        if(maxScore < currentScore + currentNote.score){
+            maxScore = currentScore + currentNote.score;
+        }
 
-        currentScore += currentNote.score;
-        addedScoreNote[currentIndex] = true;
+        long long updateLimit = -1;
 
         for(int i=0; i<notes.size(); i++){
-            if(notes[i].start > currentNote.end && scores[i] - (addedScoreNote[i] ? notes[i].score : 0) < currentScore){
+            if((updateLimit == -1 || notes[i].start <= updateLimit) && notes[i].start > currentNote.end && scores[i] < currentScore + currentNote.score){
+                if(updateLimit == -1 || notes[i].end < updateLimit){
+                    updateLimit = notes[i].end;
+                }
+
+                scores[i] = currentScore + currentNote.score;
                 indexesToUpdate.push(i);
             }
         }
     }
+
+    return maxScore;
 }
 
 int main(){
@@ -51,15 +63,15 @@ int main(){
     cin >> cases;
 
     for(int c=1; c<=cases; c++){
+        cerr << "Case #" << c << ": " << flush;
         cout << "Case #" << c << ": " << flush;
 
         int noteCount;
         cin >> noteCount;
 
-        vector<Note> notes;
-        vector<int> scores(noteCount);
+        cerr << "(Notes: " << noteCount << ") " << flush;
 
-        long long end = 0;
+        vector<Note> notes;
 
         for(int i=0; i<noteCount; i++){
             int initialposition, length, speed, score;
@@ -82,25 +94,38 @@ int main(){
                 continue;
             }
 
-            if(note.end > end){
-                end = note.end;
-            }
-
             notes.push_back(note);
         }
 
-        sort(notes.begin(), notes.end());
+        int extraScore = 0;
 
-        solve(notes, scores, end);
+        for(int i=0; i<notes.size(); i++){
+            bool anyOver = false;
 
-        int maxScore = 0;
+            for(int j=0; j<notes.size(); j++){
+                if(i != j && notes[i].start <= notes[j].end && notes[i].end >= notes[j].start){
+                    anyOver = true;
 
-        for(int score : scores){
-            if(score > maxScore){
-                maxScore = score;
+                    break;
+                }
+            }
+
+            if(!anyOver){
+                extraScore += notes[i].score;
+                notes.erase(notes.begin() + i, notes.begin() + i + 1);
+                --i;
             }
         }
 
-        cout << maxScore << endl;
+        cerr << "(Extra score: " << extraScore << ") " << flush;
+
+        sort(notes.begin(), notes.end());
+
+        //vector<vector<Note>> parts = divide(notes) // Divide into separated note blocks (not implemented because it wasn't needed to generate the submit)
+
+        int maxScore = solve(notes);
+
+        cerr << (maxScore + extraScore) << endl;
+        cout << (maxScore + extraScore) << endl;
     }
 }
