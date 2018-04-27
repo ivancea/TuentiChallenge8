@@ -73,113 +73,44 @@ boolean trySolution(const set<int> indexes){
     return readLine().find("not correct") == string::npos;
 }
 
-boolean solveFindingDuplicated(const vector<string>& parts, const string& original, const set<int>& ignoredIndexes){
-    vector<int> indexes;
-
+bool solve(const vector<string>& parts, const string& remainder, set<int>& usedIndexes){
     for(int i=0; i<parts.size(); i++){
-        indexes.push_back(i);
-    }
+        if(usedIndexes.find(i) == usedIndexes.end()){
+            const string& bigger = remainder.size() > parts[i].size() ? remainder : parts[i];
+            const string& smaller = remainder.size() > parts[i].size() ? parts[i] : remainder;
 
-    for(int count=2; count < parts.size()/2; count++){
-        long long checksum = 0;
+            if(bigger.compare(0, smaller.size(), smaller) == 0){
+                usedIndexes.insert(i);
 
-        do{
-            long long currentChecksum = 0;
-            bool shouldContinue = false;
+                string newRemainder = bigger.substr(smaller.size());
 
-            for(int i=0; i<count; i++){
-                shouldContinue = ignoredIndexes.find(indexes[i]) != ignoredIndexes.end();
-
-                if(shouldContinue){
-                    break;
+                if(newRemainder.size() == 0){
+                    if(trySolution(usedIndexes)){
+                        return true;
+                    }
                 }
 
-                currentChecksum += indexes[i] * pow(count, i);
+                if(solve(parts, newRemainder, usedIndexes)){
+                    return true;
+                }
+
+                usedIndexes.erase(i);
             }
-
-            if(shouldContinue || checksum != 0 && checksum == currentChecksum){
-                continue;
-            }
-
-            checksum = currentChecksum;
-
-            string str;
-
-            int totalLength = 0;
-
-            for(int i=0; i<count; i++){
-                totalLength += parts[indexes[i]].size();
-            }
-
-            if(totalLength != original.size()){
-                continue;
-            }
-
-            for(int i=0; i<count; i++){
-                str += parts[indexes[i]];
-            }
-
-            if(str != original){
-                continue;
-            }
-
-            set<int> usedIndexes;
-
-            for(int i=0; i<count; i++){
-                usedIndexes.insert(indexes[i]);
-            }
-
-            for(int index : ignoredIndexes){
-                usedIndexes.insert(index);
-            }
-
-            if(trySolution(usedIndexes)){
-                cout << "FOUND: " << str << endl;
-
-                return true;
-            }
-        }while(next_permutation(indexes.begin(), indexes.end()));
+        }
     }
 
     return false;
 }
 
 bool solve(const vector<string>& parts){
-    vector<int> indexes;
-
     for(int i=0; i<parts.size(); i++){
-        indexes.push_back(i);
-    }
+        set<int> usedIndexes;
 
-    for(int count=2; count < parts.size()/2; count++){
-        long long checksum = 0;
+        usedIndexes.insert(i);
 
-        do{
-            long long currentChecksum = 0;
-
-            for(int i=0; i<count; i++){
-                currentChecksum += indexes[i] * pow(count, i);
-            }
-
-            if(checksum != 0 && checksum == currentChecksum){
-                continue;
-            }
-
-            checksum = currentChecksum;
-
-            string str;
-
-            set<int> usedIndexes;
-
-            for(int i=0; i<count; i++){
-                usedIndexes.insert(indexes[i]);
-                str += parts[indexes[i]];
-            }
-
-            if(solveFindingDuplicated(parts, str, usedIndexes)){
-                return true;
-            }
-        }while(next_permutation(indexes.begin(), indexes.end()));
+        if(solve(parts, parts[i], usedIndexes)){
+            return true;
+        }
     }
 
     return false;
@@ -194,12 +125,13 @@ int main(){
     // Please, provide "TEST" or "SUBMIT"
     readLine();
 
-    sendLine("TEST");
+    sendLine("SUBMIT");
 
     // Start!
     readLine();
     
     for(int c=1; c<=20; c++){
+        cout << "\nCase " << c << endl;
         string data = readLine();
         vector<string> parts = split(data, ' ');
         
