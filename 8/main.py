@@ -1,5 +1,4 @@
 import sys
-from itertools import count
 from fractions import gcd
 from sympy.solvers.diophantine import diop_solve
 from sympy import symbols
@@ -14,9 +13,10 @@ def testValue(doorIntervals, doorOffsets, value):
 
     return True
 
-def getNextInterval(intervalX, offsetX, indexX, intervalY, offsetY, indexY):
+def getNextInterval(intervalX, offsetX, intervalY, offsetY):
     x,y = symbols("x, y", integer=True)
-    t = diop_solve(intervalX*x - intervalY*y - (offsetX + indexX - offsetY - indexY))
+
+    t = diop_solve(intervalX*x - intervalY*y - (offsetX - offsetY))
     
     s, = t[0].free_symbols
     k = t[0].subs({s: 0})
@@ -38,11 +38,17 @@ def solve(doorIntervals, doorOffsets):
         if (currentOffset - doorOffsets[i] - i) % gcd(currentInterval, doorIntervals[i]) != 0:
             return "NEVER"
             
-        currentInterval, currentOffset = getNextInterval(currentInterval, currentOffset, 0, doorIntervals[i], doorOffsets[i], i)
-        
-
-
+        currentInterval, currentOffset = getNextInterval(currentInterval, currentOffset, doorIntervals[i], doorOffsets[i] + i)
+    
     return currentInterval - currentOffset
+
+def isPossible(doorIntervals, doorOffsets):
+    for i in range(0, len(doorIntervals)):
+        for j in range(i+1, len(doorIntervals)):
+            if (doorOffsets[i] + i - doorOffsets[j] - j) % gcd(doorIntervals[i], doorIntervals[j]) != 0:
+                return False
+
+    return True
 
 def main():
     caseCount = int(input())
@@ -59,12 +65,22 @@ def main():
             doorIntervals.append(interval)
             doorOffsets.append(offset)
 
-            if currentCase == 13:
+            if currentCase == 8:
                 err(str(interval) + " " + str(offset))
         
-        result = solve(doorIntervals, doorOffsets)
+        originalIntervals = list(doorIntervals)
+        originalOffsets = list(doorOffsets)
 
-        if result != "NEVER":
+        for i in range(0, len(doorIntervals)):
+            for j in range(i+1, len(doorIntervals)):
+                g = gcd(doorIntervals[i], doorIntervals[j])
+                doorIntervals[j] //= g
+
+        if not isPossible(originalIntervals, originalOffsets):
+            result = "NEVER"
+        else:
+            result = solve(doorIntervals, doorOffsets)
+
             if not testValue(doorIntervals, doorOffsets, result):
                 err("INVALID VALUE")
 
