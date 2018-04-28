@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <map>
 #include <set>
 #include <queue>
 #include <algorithm>
@@ -57,24 +58,57 @@ public:
     }
 };
 
+map<int, long long> cache;
+
+bool tryGetCache(int key, long long& ret){
+    auto it = cache.find(key);
+    if(it != cache.end()){
+        ret = it->second;
+        return true;
+    }
+    return false;
+}
+
+void setCache(int key,  long long value){
+    cache[key] = value;
+}
+
+void resetCache(){
+    cache.clear();
+}
+
+const long long Mod = 1000000007;
+
 long long getPossibilities(const Matrix<bool>& invalidPartners, int rangeStart, int rangeEnd){
     if(rangeEnd - rangeStart <= 0){
-        return 0;
+        return 1;
     }
 
     long long total = 0;
 
-    // Connecting the {rangeStart} point
+    // Connecting {rangeStart} to {i}
     // i+=2 because no odd elements range allowed
     for(int i=rangeStart+1; i<rangeEnd; i+=2){
-        if(!invalidPartners.get(0,i)){
-            long long possibilities = getPossibilities(invalidPartners, rangeStart+1, i);
-
-            if(possibilities != 0){
-                possibilities *= getPossibilities(invalidPartners, i+1, rangeEnd);
+        if(!invalidPartners.get(rangeStart,i)){
+            long long possibilities;
+            
+            if(!tryGetCache((rangeStart+1)*10000 + i, possibilities)){
+                possibilities = getPossibilities(invalidPartners, rangeStart+1, i);
+                setCache((rangeStart+1)*10000 + i, possibilities);
             }
 
-            total += possibilities;
+            if(possibilities != 0){
+                long long t;
+                
+                if(!tryGetCache((i+1)*10000 + rangeEnd, t)){
+                    t = getPossibilities(invalidPartners, i+1, rangeEnd);
+                    setCache((i+1)*10000 + rangeEnd, t);
+                }
+
+                possibilities *= t;
+            }
+
+            total = (total + possibilities) % Mod;
         }
     }
 
@@ -92,6 +126,8 @@ int main(){
 
         Matrix<bool> invalidPartners(people, people);
 
+        invalidPartners.setAll(false);
+
         for(int i=0; i<invalidPartnerCount; i++){
             int a, b;
             cin >> a >> b;
@@ -101,7 +137,9 @@ int main(){
         }
 
         long long result = getPossibilities(invalidPartners, 0, people);
+        resetCache();
 
+        cerr << "Case #" << c << ": " << result << endl;
         cout << "Case #" << c << ": " << result << endl;
     }
 }
