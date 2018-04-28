@@ -1,0 +1,1 @@
+usbip -> rename stty to stty2 and imprpant to catch the key
