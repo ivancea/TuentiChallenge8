@@ -58,31 +58,16 @@ long long calcBasicPossibilities(int width, int blockWidth){
         return 1;
     }
 
-    // Center hole and top and bottom holes combinations
-    long long rawPossibilities = blockWidth - 1 + blockWidth*blockWidth;
-
+    long long rawPossibilities = 1 + (blockWidth-1)*3 + (blockWidth-1)*(blockWidth-1)*3;
+    
     return mod(rawPossibilities * cache[width - blockWidth]);
 }
 
-// O(1)
-long long calcBigHolePossibilities(int width, int blockWidth){
-    if(blockWidth >= width){
-        return 0;
-    }
-
-    // Two lines entering (top/bottom and center)
-    long long possibilities = mod(possibilities + (blockWidth - 1)*cache[width - blockWidth]); // Only one big hole
-
-    return mod(possibilities*2);
-}
-
-// O(n)
+// O(n^2)
 long long calcDoubleHolePossibilities(int width, int blockWidth){
     if(blockWidth + 1 >= width){
         return 0;
     }
-
-    long long possibilities = 0;
 
     /*
         ##-O
@@ -92,18 +77,18 @@ long long calcDoubleHolePossibilities(int width, int blockWidth){
 
     const long long outPossibilities = getPossibilitiesWithHoleInTheBottomCached(width - blockWidth);
 
-    // Two holes entering (top/bottom and center)
-    // i: big hole index
-    for(int i=1; i<blockWidth; i++){
-        // j: small hole index (hole inside big hole)
-        possibilities = mod(possibilities + (blockWidth-i)*outPossibilities);
-    }
+    int rawPossibilities = 0;
 
+    for(int i=1; i<blockWidth; i++){
+        rawPossibilities += (i-1)*(blockWidth - i)*2;
+
+        rawPossibilities += blockWidth - i;
+    }
+    
     // x2 because we consider bottom and top possibilities
-    return mod(possibilities*2);
+    return mod(rawPossibilities*outPossibilities*2);
 }
 
-// O(1)
 long long getPossibilities(int width){
     if(width <= 1){
         return 1;
@@ -118,7 +103,6 @@ long long getPossibilities(int width){
     // i: Current max index
     for(int i=1; i<=width; i++){
         total = mod(total + calcBasicPossibilities(width, i));
-        total = mod(total + calcBigHolePossibilities(width, i));
         total = mod(total + calcDoubleHolePossibilities(width, i));
     }
 
@@ -132,6 +116,7 @@ long long getPossibilitiesCached(int width){
     }
 
     for(int i=cache.size(); i <= width; i++){
+        cout << i << endl;
         cache.push_back(getPossibilities(i));
     }
 
