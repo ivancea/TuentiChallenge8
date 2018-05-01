@@ -25,9 +25,10 @@ long long getPossibilitiesWithHoleInTheBottom(int width){
     for(int i=1; i<=width-1; i++){
         // j: center index
         // No double hole here
-        for(int j=1; j<=width-1; j++){
-            possibilities = mod(possibilities + cache[width-max(i,j)]);
+        for(int j=1; j<i; j++){
+            possibilities = mod(possibilities + cache[width-i]*2);
         }
+        possibilities = mod(possibilities + cache[width-i]);
         
         // Double hole
         // j: center index
@@ -63,7 +64,7 @@ long long calcBasicPossibilities(int width, int blockWidth){
     return mod(rawPossibilities * cache[width - blockWidth]);
 }
 
-// O(n^2)
+// O(n)
 long long calcDoubleHolePossibilities(int width, int blockWidth){
     if(blockWidth + 1 >= width){
         return 0;
@@ -116,7 +117,6 @@ long long getPossibilitiesCached(int width){
     }
 
     for(int i=cache.size(); i <= width; i++){
-        cout << i << endl;
         cache.push_back(getPossibilities(i));
     }
 
