@@ -81,11 +81,11 @@ long long calcDoubleHolePossibilities(int width, int blockWidth){
     int rawPossibilities = 0;
 
     for(int i=1; i<blockWidth; i++){
-        rawPossibilities += (i-1)*(blockWidth - i)*2;
+        rawPossibilities = mod(rawPossibilities + (i-1)*(blockWidth - i)*2);
 
         rawPossibilities += blockWidth - i;
     }
-    
+
     // x2 because we consider bottom and top possibilities
     return mod(rawPossibilities*outPossibilities*2);
 }
